@@ -1,0 +1,7 @@
+{
+  "variants": {
+    "": {
+      "model": "elismod:block/step_block"
+    }
+  }
+}

@@ -1,0 +1,13 @@
+{
+  "creativetab.elismod_tab": "Eli's Mod",
+
+  "block.elismod.ore_miner_block" : "Ore Miner",
+
+  "item.elismod.ore_finder" : "Ore Finder",
+
+  "item.elismod.pathfinder" : "Pathfinder",
+
+  "block.elismod.cell_block" : "Cell Block",
+
+  "block.elismod.step_block" : "Step Block"
+}
