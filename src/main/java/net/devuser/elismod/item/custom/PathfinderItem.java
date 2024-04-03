@@ -1,7 +1,6 @@
 package net.devuser.elismod.item.custom;
 
 import net.minecraft.core.BlockPos;
-import net.minecraft.network.chat.Component;
 import net.minecraft.world.InteractionResult;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.Item;
@@ -23,109 +22,139 @@ public class PathfinderItem extends Item {
         Level level = pContext.getLevel();
         Player player = pContext.getPlayer();
 
-        if (!level.isClientSide()) {
-            if (!level.getBlockState(clickedPos).getBlock().equals(Blocks.RED_WOOL)) {
-                // return, can't start maze
-                player.sendSystemMessage(Component.literal(
-                        "Click on red wool to start pathfinding to green wool"));
-                return InteractionResult.SUCCESS;
-            }
+        // alright literally what the frick is happening here
 
-            // otherwise, let the maze begin!
-            List<BlockPos> pathBlocks = findPathBlocks(clickedPos, level, player);
+        // we gotta:
+        // 0. generate map of air blocks with predecessors
+        // 0.5. if none found, remove adjacent glass chains
+        // 1. locate the green wool (maybe redundant?)
+        // 2. see which air block neighboring the green wool is the closest to the red wool
+        // (THROUGH THE AIR MAP, not through Manhattan distance)
+        // 3. fill in those blocks with glass
+        // 4. profit
 
-            if (pathBlocks == null) {
-                // see if neighboring glass
-                boolean neighbors = isNeighboringGlass(clickedPos, level);
-                if (neighbors) {
-                    List<BlockPos> glassBlocks = findGlass(clickedPos, level);
-                    glassBlocks.remove(clickedPos);
 
-                    // remove found glass blocks
-                    for (BlockPos currentPos : glassBlocks) {
-                        level.setBlock(currentPos, Blocks.AIR.defaultBlockState(), 3);
-                    }
+
+        // 0. generate map of air blocks with predecessors
+        HashMap<BlockPos, BlockPos> airMapWithPredecessors = getAirMapWithPredecessors(clickedPos, level);
+
+        // 0.5. if none found, remove adjacent glass chains
+        if (airMapWithPredecessors == null) {
+            // see if neighboring glass
+            boolean neighbors = isNeighboringGlass(clickedPos, level);
+            if (neighbors) {
+                List<BlockPos> glassBlocks = findGlass(clickedPos, level);
+                glassBlocks.remove(clickedPos);
+
+                // remove found glass blocks
+                for (BlockPos currentPos : glassBlocks) {
+                    level.setBlock(currentPos, Blocks.AIR.defaultBlockState(), 3);
                 }
-
-                return InteractionResult.SUCCESS;
             }
 
-            // fill pathfound blocks with glass
-            for (BlockPos currentPos : pathBlocks) {
-                level.setBlock(currentPos, Blocks.GLASS.defaultBlockState(), 3);
-            }
+            return InteractionResult.SUCCESS;
+        }
 
-            System.out.println(pathBlocks.size());
+        // 1. locate the green wool
+        Set<BlockPos> blockPosSet = airMapWithPredecessors.keySet();
+        BlockPos greenWoolPos = findGreenWool(blockPosSet, level);
+
+        // we shouldn't set the green wool block to glass
+        blockPosSet.remove(greenWoolPos);
+        airMapWithPredecessors.remove(greenWoolPos);
+
+        // 2. see which air block neighboring the green wool is the closest to the red wool
+
+        // 2a. find all air adjacent to green wool and in the air map
+        Set<BlockPos> airNeighboringGreenWool = getNeighbors(greenWoolPos, blockPosSet);
+
+        // 2b. see which has minimal distance to red through predecessor chain
+        int bestDistance = Integer.MAX_VALUE;
+        BlockPos bestPos = null;
+        for (BlockPos aNGW : airNeighboringGreenWool) {
+            int bruh = getDistanceThroughHashMap(airMapWithPredecessors, aNGW);
+            if (bruh < bestDistance) {
+                bestDistance = bruh;
+                bestPos = aNGW;
+            }
+        }
+
+        // 3. fill in the blocks in the predecessor chain from bestPos with glass
+        // bestPos essentially is the tail of our chain
+
+        while (airMapWithPredecessors.get(bestPos) != null) {
+            level.setBlock(bestPos, Blocks.GLASS.defaultBlockState(), 3);
+            bestPos = airMapWithPredecessors.get(bestPos);
         }
 
         return InteractionResult.SUCCESS;
     }
 
-    private boolean isNeighboringGlass(BlockPos currentPos, Level level) {
-        BlockPos[] adjPos = new BlockPos[]{
-                currentPos.north(), currentPos.south(),
-                currentPos.east(), currentPos.west()
-        };
+    public HashMap<BlockPos, BlockPos> getAirMapWithPredecessors(BlockPos clickedPos, Level level) {
+        // how the frick are we doing this literally
+        // 1. create hash map airMapWithPredecessors with clickedPos as the "root" node of the tree
+        // 2. bread first search until we find green wool, then we're done
 
-        for (BlockPos inspectedPos : adjPos) {
-            Block inspectedBlock = level.getBlockState(inspectedPos).getBlock();
-            if (inspectedBlock.equals(Blocks.GLASS)) return true;
-        }
+        // 1.
+        HashMap<BlockPos, BlockPos> airMapWithPredecessors = new HashMap<>();
+        airMapWithPredecessors.put(clickedPos, null);
 
-        return false;
-    }
+        // 2.
 
-    public List<BlockPos> findPathBlocks(BlockPos redWoolPos, Level level, Player player) {
-        // should return all blocks BETWEEN red wool and green wool exclusive
-
-        List<BlockPos> airMap = findGreenWool(redWoolPos, level);
-        if (airMap == null) return null;
-        BlockPos greenWoolPos = airMap.get(airMap.size() - 1);
-
-        // find predecessors for each block to create minimal path
-        HashMap<BlockPos, BlockPos> posPredecessors = findPredecessors(level, airMap, redWoolPos);
-
-        List<BlockPos> finalPath = createFinalPath(posPredecessors, greenWoolPos, redWoolPos);
-
-        return finalPath;
-    }
-
-    private List<BlockPos> createFinalPath(HashMap<BlockPos, BlockPos> posPredecessors, BlockPos greenWoolPos, BlockPos redWoolPos) {
-        List<BlockPos> finalPath = new LinkedList<>();
-
-        BlockPos currentPos = posPredecessors.get(greenWoolPos);
-
-        while (currentPos != redWoolPos) {
-            finalPath.add(currentPos);
-            currentPos = posPredecessors.get(currentPos);
-        }
-
-        return finalPath;
-    }
-
-    private HashMap<BlockPos, BlockPos> findPredecessors(Level level, List<BlockPos> map, BlockPos redWoolPos) {
-        HashMap<BlockPos, BlockPos> predecessorMap = new HashMap<>();
-        predecessorMap.put(redWoolPos, redWoolPos);
+        // queue is for searching the air
         Queue<BlockPos> queue = new LinkedList<>();
-        queue.add(redWoolPos);
+        queue.add(clickedPos);
+
+        // visited is for seeing where we've been
+        Set<BlockPos> visited = new HashSet<>();
+
         BlockPos currentPos;
 
         while (!queue.isEmpty()) {
             currentPos = queue.remove();
-            List<BlockPos> neighbors = getNeighbors(currentPos, map);
-            for (BlockPos inspectedPos : neighbors) {
-                if (predecessorMap.get(inspectedPos) == null) {
-                    predecessorMap.put(inspectedPos, currentPos);
+
+            visited.add(currentPos);
+
+            BlockPos[] adjPos = new BlockPos[]{
+                    currentPos.north(), currentPos.south(),
+                    currentPos.east(), currentPos.west()
+            };
+
+            // where can we go next?
+            for (BlockPos inspectedPos : adjPos) {
+                Block inspectedBlock = level.getBlockState(inspectedPos).getBlock();
+
+                if (inspectedBlock.equals(Blocks.AIR) && !visited.contains(inspectedPos)) {
+
+                    airMapWithPredecessors.put(inspectedPos, currentPos);
                     queue.add(inspectedPos);
+
+                } else if (inspectedBlock.equals(Blocks.GREEN_WOOL)) {
+
+                    airMapWithPredecessors.put(inspectedPos, currentPos);
+                    return airMapWithPredecessors;
+
                 }
             }
         }
 
-        return predecessorMap;
+        return null;
     }
 
-    private List<BlockPos> getNeighbors(BlockPos currentPos, List<BlockPos> map) {
-        List<BlockPos> ret = new LinkedList<>();
+    private int getDistanceThroughHashMap(HashMap<BlockPos, BlockPos> blockPosHashMap, BlockPos startPos) {
+        BlockPos iterPos = startPos;
+        int count = 0;
+
+        while (iterPos != null) {
+            iterPos = blockPosHashMap.get(iterPos);
+            count++;
+        }
+
+        return count;
+    }
+
+    private Set<BlockPos> getNeighbors(BlockPos currentPos, Set<BlockPos> map) {
+        Set<BlockPos> ret = new HashSet<>();
 
         for (BlockPos inspectedPos : map) {
             if (posAreAdjacent(currentPos, inspectedPos)) {
@@ -146,54 +175,32 @@ public class PathfinderItem extends Item {
         return ((a||b)&&!(a&&b)); // teehee
     }
 
-    public List<BlockPos> findGreenWool(BlockPos initPos, Level level) {
-        // create comparator through lambda :D
-        Comparator<BlockPos> manhattanComparator = (p1, p2) -> Double.compare(manhattanDistance(initPos, p1), manhattanDistance(initPos, p2));
-
-        // pack your bags
-        Queue<BlockPos> bfsQueue = new PriorityQueue<>(manhattanComparator);
-        bfsQueue.add(initPos);
-        List<BlockPos> visited = new ArrayList<>();
-
-        while (!bfsQueue.isEmpty()) {
-            BlockPos currentPos = bfsQueue.remove();
-
-            // ok, we just got here
-            visited.add(currentPos);
-
-            // what do we see?
-            BlockPos[] adjPos = new BlockPos[]{
-                    currentPos.north(), currentPos.south(),
-                    currentPos.east(), currentPos.west()
-            };
-
-            // where can we go next?
-            for (BlockPos inspectedPos : adjPos) {
-                Block inspectedBlock = level.getBlockState(inspectedPos).getBlock();
-                if (inspectedBlock.equals(Blocks.AIR) && !visited.contains(inspectedPos)) {
-                    bfsQueue.add(inspectedPos);
-                } else if (inspectedBlock.equals(Blocks.GREEN_WOOL)) {
-                    visited.add(inspectedPos);
-                    return visited;
-                }
-            }
+    private BlockPos findGreenWool(Set<BlockPos> blockPosSet, Level level) {
+        for (BlockPos p : blockPosSet) {
+            Block inspectedBlock = level.getBlockState(p).getBlock();
+            if (inspectedBlock.equals(Blocks.GREEN_WOOL)) return p;
         }
 
         return null;
     }
 
-    private int manhattanDistance(BlockPos initPos, BlockPos targetPos) {
-        int xx = Math.abs(initPos.getX() - targetPos.getX());
-        int zz = Math.abs(initPos.getZ() - targetPos.getZ());
-        return xx+zz;
+    private boolean isNeighboringGlass(BlockPos currentPos, Level level) {
+        BlockPos[] adjPos = new BlockPos[]{
+                currentPos.north(), currentPos.south(),
+                currentPos.east(), currentPos.west()
+        };
+
+        for (BlockPos inspectedPos : adjPos) {
+            Block inspectedBlock = level.getBlockState(inspectedPos).getBlock();
+            if (inspectedBlock.equals(Blocks.GLASS)) return true;
+        }
+
+        return false;
     }
 
     public List<BlockPos> findGlass(BlockPos initPos, Level level) {
-        // create comparator through lambda :D
-        Comparator<BlockPos> manhattanComparator = (p1, p2) -> Double.compare(manhattanDistance(initPos, p1), manhattanDistance(initPos, p2));
-
         // pack your bags
-        Queue<BlockPos> bfsQueue = new PriorityQueue<>(manhattanComparator);
+        Queue<BlockPos> bfsQueue = new PriorityQueue<>();
         bfsQueue.add(initPos);
         List<BlockPos> visited = new ArrayList<>();
 
