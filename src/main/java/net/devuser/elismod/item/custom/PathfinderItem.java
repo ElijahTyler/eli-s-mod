@@ -20,7 +20,6 @@ public class PathfinderItem extends Item {
     public InteractionResult useOn(UseOnContext pContext) {
         BlockPos clickedPos = pContext.getClickedPos();
         Level level = pContext.getLevel();
-        Player player = pContext.getPlayer();
 
         // alright literally what the frick is happening here
 
