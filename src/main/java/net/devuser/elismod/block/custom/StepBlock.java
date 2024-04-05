@@ -53,20 +53,34 @@ public class StepBlock extends Block {
         // what do we put in nextGenerationCellBlocks? we need to use the life/death rules of Conway's Game of Life
 
 
-        // a. cell blocks stay alive if 2 or 3 neighbors are cell blocks too
+        // a. cell blocks stay alive if # of neighbors is in survival rules
         for (BlockPos cell_bp : currentCellBlocks) {
             int cbNumOfCellNeighbors = ElisMod.gol.getNumOfCellNeighbors(level, cell_bp);
+            boolean staysAlive = false;
 
-            if ((cbNumOfCellNeighbors == 2)||(cbNumOfCellNeighbors == 3)) {
+            for (int x : ElisMod.gol.survival_rules) {
+                if (x == cbNumOfCellNeighbors) {
+                    staysAlive = true;
+                    break;
+                }
+            }
+            if (staysAlive) {
                 nextGenerationCellBlocks.add(cell_bp);
             }
         }
 
-        // b. non-cell blocks become alive if exactly 3 neighbors are cell blocks
+        // b. non-cell blocks become alive if # of neighbors is in birth rules
         for (BlockPos non_cell_bp : currentCellBlocksNeighbors) {
             int cbNumOfCellNeighbors = ElisMod.gol.getNumOfCellNeighbors(level, non_cell_bp);
+            boolean isBorn = false;
 
-            if (cbNumOfCellNeighbors == 3) {
+            for (int x : ElisMod.gol.birth_rules) {
+                if (x == cbNumOfCellNeighbors) {
+                    isBorn = true;
+                    break;
+                }
+            }
+            if (isBorn) {
                 nextGenerationCellBlocks.add(non_cell_bp);
             }
         }

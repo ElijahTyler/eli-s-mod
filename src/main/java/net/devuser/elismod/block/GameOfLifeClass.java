@@ -12,6 +12,8 @@ import java.util.Set;
 
 public class GameOfLifeClass {
     private Set<BlockPos> cellBlocks;
+    public Integer[] birth_rules = new Integer[]{3};
+    public Integer[] survival_rules = new Integer[]{2, 3};
     public GameOfLifeClass() {
         cellBlocks = new HashSet<>();
     }
