@@ -7,21 +7,17 @@ import net.minecraft.world.InteractionHand;
 import net.minecraft.world.InteractionResult;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.level.Level;
-import net.minecraft.world.level.LevelReader;
 import net.minecraft.world.level.block.Block;
-import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.state.BlockState;
-import net.minecraft.world.level.block.state.properties.BlockStateProperties;
 import net.minecraft.world.phys.BlockHitResult;
-import net.minecraftforge.common.Tags;
 
 import java.util.HashSet;
 import java.util.Set;
 
-public class StepBlock extends Block {
+public class GOLStepBlock extends Block {
     private boolean stepIsPowered;
 
-    public StepBlock(Properties pProperties) {
+    public GOLStepBlock(Properties pProperties) {
         super(pProperties);
 
         stepIsPowered = false;

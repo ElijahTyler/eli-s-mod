@@ -1,6 +1,6 @@
 package net.devuser.elismod.block;
 
-import net.devuser.elismod.block.custom.CellBlock;
+import net.devuser.elismod.block.custom.GOLCellBlock;
 import net.minecraft.core.BlockPos;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.AirBlock;
@@ -11,38 +11,42 @@ import java.util.HashSet;
 import java.util.Set;
 
 public class GameOfLifeClass {
-    private Set<BlockPos> cellBlocks;
-    public Integer[] birth_rules = new Integer[]{3};
-    public Integer[] survival_rules = new Integer[]{2, 3};
+    private Set<BlockPos> golCellBlocks;
+    public Integer[] birth_rules = new Integer[]{
+            3
+    };
+    public Integer[] survival_rules = new Integer[]{
+            2, 3
+    };
     public GameOfLifeClass() {
-        cellBlocks = new HashSet<>();
+        golCellBlocks = new HashSet<>();
     }
 
     public void addCell(BlockPos b) {
-        cellBlocks.add(b);
+        golCellBlocks.add(b);
     }
 
     public void removeCell(BlockPos b) {
-        cellBlocks.remove(b);
+        golCellBlocks.remove(b);
     }
 
     public int getNumOfCells() {
-        return cellBlocks.size();
+        return golCellBlocks.size();
     }
 
     public void setAllCellBlocks(Set<BlockPos> new_cb) {
-        cellBlocks = new_cb;
+        golCellBlocks = new_cb;
     }
 
     public Set<BlockPos> getCells() {
-        return cellBlocks;
+        return golCellBlocks;
     }
 
     public Set<BlockPos> getAllNonCellNeighborsOfCurrentCellBlocks(Level level) {
         // gets all non-cell neighbors from all cell blocks
         Set<BlockPos> neighbors = new HashSet<>();
 
-        for (BlockPos cell_bp : cellBlocks) {
+        for (BlockPos cell_bp : golCellBlocks) {
             neighbors.addAll( getAllNonCellNeighbors(cell_bp, level) );
         }
 
@@ -87,7 +91,7 @@ public class GameOfLifeClass {
                 BlockState neighborState = world.getBlockState(mutablePos);
                 Block neighborBlock = neighborState.getBlock();
 
-                if (neighborBlock instanceof CellBlock) {
+                if (neighborBlock instanceof GOLCellBlock) {
                     neighboringCellBlocks.add(mutablePos.immutable());
                 }
             }

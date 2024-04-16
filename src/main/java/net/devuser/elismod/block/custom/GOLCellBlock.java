@@ -5,16 +5,12 @@ import net.minecraft.core.BlockPos;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.Level;
-import net.minecraft.world.level.block.AirBlock;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.state.BlockState;
 
-import java.util.HashSet;
-import java.util.Set;
-
-public class CellBlock extends Block {
+public class GOLCellBlock extends Block {
     BlockPos ownPos;
-    public CellBlock(Properties pProperties) {
+    public GOLCellBlock(Properties pProperties) {
         super(pProperties);
     }
 

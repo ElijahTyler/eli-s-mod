@@ -1,14 +1,13 @@
 package net.devuser.elismod.block;
 
 import net.devuser.elismod.ElisMod;
-import net.devuser.elismod.block.custom.CellBlock;
-import net.devuser.elismod.block.custom.StepBlock;
+import net.devuser.elismod.block.custom.GOLCellBlock;
+import net.devuser.elismod.block.custom.GOLStepBlock;
 import net.devuser.elismod.item.ModItems;
 import net.minecraft.world.item.BlockItem;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.Blocks;
-import net.minecraft.world.level.block.SoundType;
 import net.minecraft.world.level.block.state.BlockBehaviour;
 import net.minecraftforge.eventbus.api.IEventBus;
 import net.minecraftforge.registries.DeferredRegister;
@@ -25,10 +24,10 @@ public class ModBlocks {
 //            () -> new OreMinerBlock(BlockBehaviour.Properties.copy(Blocks.STONE)));
 
     public static final RegistryObject<Block> CELL_BLOCK = registerBlock("cell_block",
-            () -> new CellBlock(BlockBehaviour.Properties.copy(Blocks.CLAY)));
+            () -> new GOLCellBlock(BlockBehaviour.Properties.copy(Blocks.CLAY)));
 
     public static final RegistryObject<Block> STEP_BLOCK = registerBlock("step_block",
-            () -> new StepBlock(BlockBehaviour.Properties.copy(Blocks.CLAY)));
+            () -> new GOLStepBlock(BlockBehaviour.Properties.copy(Blocks.CLAY)));
 
 
 
