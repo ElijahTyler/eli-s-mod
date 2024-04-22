@@ -5,9 +5,9 @@ import net.minecraft.core.BlockPos;
 import java.util.HashSet;
 import java.util.Set;
 
-public class LangtonLoopClass {
+public class CoddClass {
     private Set<BlockPos> langtonCellBlocks;
-    public LangtonLoopClass(){
+    public CoddClass(){
         langtonCellBlocks = new HashSet<>();
     }
 }

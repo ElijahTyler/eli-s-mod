@@ -6,7 +6,7 @@ import java.util.Set;
 
 import static java.lang.Math.max;
 
-public class LangtonTopLevelRules {
+public class CoddTopLevelRules {
     public class MiddleLevelRules {
         private int key;
         private HashMap<String, Integer> rules;
@@ -28,7 +28,7 @@ public class LangtonTopLevelRules {
 
     private HashMap<Integer, MiddleLevelRules> topLevelRules;
 
-    public LangtonTopLevelRules() {
+    public CoddTopLevelRules() {
         topLevelRules = new HashMap<>();
     }
 
