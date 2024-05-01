@@ -1,6 +1,7 @@
 package net.devuser.elismod;
 
 import com.mojang.logging.LogUtils;
+import net.devuser.elismod.block.CoddClass;
 import net.devuser.elismod.block.GameOfLifeClass;
 import net.devuser.elismod.block.ModBlocks;
 import net.devuser.elismod.block.entity.ModBlockEntities;
@@ -27,12 +28,14 @@ public class ElisMod {
     public static final String MOD_ID = "elismod";
 
     public static GameOfLifeClass gol;
+    public static CoddClass codd;
 
     // Directly reference a slf4j logger
     private static final Logger LOGGER = LogUtils.getLogger();
     public ElisMod() {
 
         gol = new GameOfLifeClass();
+        codd = new CoddClass();
 
         IEventBus modEventBus = FMLJavaModLoadingContext.get().getModEventBus();
 
