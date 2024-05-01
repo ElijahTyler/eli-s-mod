@@ -30,14 +30,6 @@ public class GameOfLifeClass {
         golCellBlocks.remove(b);
     }
 
-    public int getNumOfCells() {
-        return golCellBlocks.size();
-    }
-
-    public void setAllCellBlocks(Set<BlockPos> new_cb) {
-        golCellBlocks = new_cb;
-    }
-
     public Set<BlockPos> getCells() {
         return golCellBlocks;
     }
@@ -53,7 +45,7 @@ public class GameOfLifeClass {
         return neighbors;
     }
 
-    public Set<BlockPos> getAllNonCellNeighbors(BlockPos pos, Level level) {
+    public Set<BlockPos> getAllNonCellNeighbors(BlockPos pos, Level level) { // Moore neighborhood
         Set<BlockPos> neighboringCellBlocks = new HashSet<>();
         BlockPos.MutableBlockPos mutablePos = new BlockPos.MutableBlockPos();
 
